@@ -1,0 +1,2 @@
+import { guardAdmin } from "@/lib/admin/guard"; import { NoAccess } from "@/components/admin/no-access"; import { SubscriptionsAdmin } from "@/components/admin/misc-pages"; import { can } from "@/lib/rbac";
+export default async function Page() { const { allowed, user } = await guardAdmin("subscriptions.read"); return allowed ? <SubscriptionsAdmin canWrite={can(user.role, "orders.write")} /> : <NoAccess />; }

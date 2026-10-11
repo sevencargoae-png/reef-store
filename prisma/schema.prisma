@@ -1,0 +1,562 @@
+// REEF | ريف — fresh produce delivery (UAE). Money in AED (Decimal 10,2), quantities Decimal(10,3).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────── Enums ─────────────────────────
+
+enum Role {
+  SUPER_ADMIN
+  MANAGER
+  OPERATIONS
+  SUPPORT
+  CUSTOMER
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum Unit {
+  KG
+  PIECE
+  BUNCH
+  PACK
+  BOX
+}
+
+enum ProductKind {
+  SIMPLE
+  BUNDLE
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  COD
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+enum CouponType {
+  PERCENT
+  FIXED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAUSED
+  CANCELLED
+}
+
+enum SubscriptionFrequency {
+  WEEKLY
+  BIWEEKLY
+}
+
+// ───────────────────────── Users ─────────────────────────
+
+model User {
+  id                 String     @id @default(cuid())
+  phone              String     @unique // normalized +9715xxxxxxxx
+  email              String?    @unique
+  name               String
+  /// staff only; customers sign in with phone + OTP and have no password
+  passwordHash       String?
+  role               Role       @default(CUSTOMER)
+  status             UserStatus @default(ACTIVE)
+  locale             String     @default("ar")
+  mustChangePassword Boolean    @default(false)
+  householdSize      Int?
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  sessions      Session[]
+  addresses     Address[]
+  orders        Order[]
+  cart          Cart?
+  lists         ShoppingList[]
+  subscriptions Subscription[]
+  wishlist      WishlistItem[]
+  auditLogs     AuditLog[]
+  orderEvents   OrderEvent[]
+  couponUses    CouponUse[]
+
+  @@index([role, status])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  userAgent String?
+  ip        String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ───────────────────────── Geography / delivery ─────────────────────────
+
+model Emirate {
+  id     String  @id @default(cuid())
+  code   String  @unique // AUH, DXB, SHJ, AJM, UAQ, RAK, FUJ
+  nameAr String
+  nameEn String
+  active Boolean @default(true)
+  sort   Int     @default(0)
+
+  areas     Area[]
+  addresses Address[]
+}
+
+model Area {
+  id                    String   @id @default(cuid())
+  emirateId             String
+  emirate               Emirate  @relation(fields: [emirateId], references: [id])
+  nameAr                String
+  nameEn                String
+  deliveryFee           Decimal  @db.Decimal(10, 2)
+  freeDeliveryThreshold Decimal? @db.Decimal(10, 2)
+  minOrder              Decimal  @default(0) @db.Decimal(10, 2)
+  active                Boolean  @default(true)
+  sort                  Int      @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  addresses Address[]
+  orders    Order[]
+
+  @@index([emirateId, active])
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label     String   @default("home")
+  emirateId String
+  emirate   Emirate  @relation(fields: [emirateId], references: [id])
+  areaId    String
+  area      Area     @relation(fields: [areaId], references: [id])
+  street    String
+  building  String // villa / building name or number
+  unit      String? // flat / floor
+  notes     String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@index([userId])
+}
+
+/// Weekly template: a slot repeats every `weekday` (0 = Sunday … 6 = Saturday).
+model DeliverySlot {
+  id          String   @id @default(cuid())
+  weekday     Int
+  startTime   String // "09:00"
+  endTime     String // "12:00"
+  capacity    Int
+  cutoffHours Int      @default(12) // hours before startTime after which the slot closes
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders        Order[]
+  subscriptions Subscription[]
+
+  @@index([weekday, active])
+}
+
+// ───────────────────────── Catalog ─────────────────────────
+
+model Category {
+  id       String     @id @default(cuid())
+  slug     String     @unique
+  nameAr   String
+  nameEn   String
+  descAr   String?
+  descEn   String?
+  image    String?
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  sort     Int        @default(0)
+  active   Boolean    @default(true)
+  showOnHome Boolean  @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  products Product[]
+}
+
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  notes     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products Product[]
+}
+
+model Product {
+  id                String      @id @default(cuid())
+  slug              String      @unique
+  sku               String?     @unique
+  kind              ProductKind @default(SIMPLE)
+  nameAr            String
+  nameEn            String
+  descAr            String?
+  descEn            String?
+  categoryId        String
+  category          Category    @relation(fields: [categoryId], references: [id])
+  supplierId        String?
+  supplier          Supplier?   @relation(fields: [supplierId], references: [id])
+  unit              Unit        @default(KG)
+  /// quantity increment the customer can order in (e.g. 0.5 kg, 1 piece)
+  step              Decimal     @default(1) @db.Decimal(10, 3)
+  minQty            Decimal     @default(1) @db.Decimal(10, 3)
+  maxQty            Decimal?    @db.Decimal(10, 3)
+  /// approximate weight per piece in kg (informational, for PIECE/BUNCH units)
+  approxWeightKg    Decimal?    @db.Decimal(10, 3)
+  /// final charge follows the weight measured at preparation
+  soldByActualWeight Boolean    @default(false)
+  price             Decimal     @db.Decimal(10, 2)
+  compareAtPrice    Decimal?    @db.Decimal(10, 2)
+  costPrice         Decimal?    @db.Decimal(10, 2)
+  vatApplicable     Boolean     @default(true)
+  trackStock        Boolean     @default(true)
+  stockQty          Decimal     @default(0) @db.Decimal(10, 3)
+  lowStockThreshold Decimal     @default(5) @db.Decimal(10, 3)
+  origin            String?     // country / farm
+  tags              String[]    @default([])
+  isActive          Boolean     @default(true)
+  isFeatured        Boolean     @default(false)
+  sort              Int         @default(0)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  images         ProductImage[]
+  bundleItems    BundleItem[]     @relation("BundleParent")
+  inBundles      BundleItem[]     @relation("BundleComponent")
+  cartItems      CartItem[]
+  orderItems     OrderItem[]
+  listItems      ShoppingListItem[]
+  subItems       SubscriptionItem[]
+  wishlistedBy   WishlistItem[]
+  stockMovements StockMovement[]
+
+  @@index([categoryId, isActive])
+  @@index([isActive, isFeatured])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  sort      Int     @default(0)
+
+  @@index([productId])
+}
+
+model BundleItem {
+  id          String  @id @default(cuid())
+  bundleId    String
+  bundle      Product @relation("BundleParent", fields: [bundleId], references: [id], onDelete: Cascade)
+  componentId String
+  component   Product @relation("BundleComponent", fields: [componentId], references: [id])
+  qty         Decimal @db.Decimal(10, 3)
+
+  @@unique([bundleId, componentId])
+}
+
+model StockMovement {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  delta     Decimal  @db.Decimal(10, 3)
+  reason    String // ORDER | CANCEL | ADJUST | RECEIVE | PREP_ADJUST
+  refId     String?
+  note      String?
+  byUserId  String?
+  createdAt DateTime @default(now())
+
+  @@index([productId, createdAt])
+}
+
+// ───────────────────────── Cart ─────────────────────────
+
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String?  @unique // guest carts
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  items CartItem[]
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  qty       Decimal @db.Decimal(10, 3)
+
+  @@unique([cartId, productId])
+}
+
+// ───────────────────────── Orders ─────────────────────────
+
+model Order {
+  id             String        @id @default(cuid())
+  number         String        @unique // RF-000001
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  status         OrderStatus   @default(PENDING)
+  paymentMethod  PaymentMethod @default(COD)
+  paymentStatus  PaymentStatus @default(UNPAID)
+
+  // address snapshot
+  customerName  String
+  customerPhone String
+  emirateName   String
+  areaId        String?
+  area          Area?         @relation(fields: [areaId], references: [id])
+  areaName      String
+  street        String
+  building      String
+  unit          String?
+  addressNotes  String?
+
+  slotId       String?
+  slot         DeliverySlot? @relation(fields: [slotId], references: [id])
+  deliveryDate DateTime?     @db.Date
+  slotLabel    String? // "09:00–12:00" snapshot
+
+  subtotal    Decimal  @db.Decimal(10, 2)
+  discount    Decimal  @default(0) @db.Decimal(10, 2)
+  deliveryFee Decimal  @default(0) @db.Decimal(10, 2)
+  vatRate     Decimal  @default(0) @db.Decimal(5, 4)
+  vatAmount   Decimal  @default(0) @db.Decimal(10, 2)
+  total       Decimal  @db.Decimal(10, 2)
+  /// recalculated after actual weights are entered at preparation; null = same as total
+  finalTotal  Decimal? @db.Decimal(10, 2)
+  couponCode  String?
+  notes       String?
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items  OrderItem[]
+  events OrderEvent[]
+  couponUses CouponUse[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@index([deliveryDate, slotId])
+}
+
+model OrderItem {
+  id            String   @id @default(cuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String?
+  product       Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  nameAr        String
+  nameEn        String
+  unit          Unit
+  unitPrice     Decimal  @db.Decimal(10, 2)
+  costPrice     Decimal? @db.Decimal(10, 2)
+  qty           Decimal  @db.Decimal(10, 3)
+  /// actual quantity/weight measured at preparation (weight-based products)
+  actualQty     Decimal? @db.Decimal(10, 3)
+  lineTotal     Decimal  @db.Decimal(10, 2)
+  soldByActualWeight Boolean @default(false)
+  vatApplicable Boolean  @default(true)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderEvent {
+  id         String       @id @default(cuid())
+  orderId    String
+  order      Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type       String // CREATED | STATUS | NOTE | WEIGHT_ADJUST | PAYMENT
+  fromStatus OrderStatus?
+  toStatus   OrderStatus?
+  note       String?
+  byUserId   String?
+  byUser     User?        @relation(fields: [byUserId], references: [id])
+  createdAt  DateTime     @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+// ───────────────────────── Promotions ─────────────────────────
+
+model Coupon {
+  id           String     @id @default(cuid())
+  code         String     @unique
+  type         CouponType
+  value        Decimal    @db.Decimal(10, 2)
+  minOrder     Decimal    @default(0) @db.Decimal(10, 2)
+  maxDiscount  Decimal?   @db.Decimal(10, 2)
+  startsAt     DateTime?
+  endsAt       DateTime?
+  usageLimit   Int?
+  perUserLimit Int?
+  usedCount    Int        @default(0)
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  uses CouponUse[]
+}
+
+model CouponUse {
+  id        String   @id @default(cuid())
+  couponId  String
+  coupon    Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([couponId, userId])
+}
+
+// ───────────────────────── Lists & subscriptions ─────────────────────────
+
+model ShoppingList {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  isWeekly  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items ShoppingListItem[]
+
+  @@index([userId])
+}
+
+model ShoppingListItem {
+  id        String       @id @default(cuid())
+  listId    String
+  list      ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  qty       Decimal      @db.Decimal(10, 3)
+
+  @@unique([listId, productId])
+}
+
+model Subscription {
+  id         String                @id @default(cuid())
+  userId     String
+  user       User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  frequency  SubscriptionFrequency @default(WEEKLY)
+  weekday    Int
+  slotId     String?
+  slot       DeliverySlot?         @relation(fields: [slotId], references: [id])
+  addressId  String
+  address    Address               @relation(fields: [addressId], references: [id])
+  status     SubscriptionStatus    @default(ACTIVE)
+  nextRunAt  DateTime              @db.Date
+  lastRunAt  DateTime?
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+
+  items  SubscriptionItem[]
+  orders Order[]
+
+  @@index([status, nextRunAt])
+  @@index([userId])
+}
+
+model SubscriptionItem {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  qty            Decimal      @db.Decimal(10, 3)
+
+  @@unique([subscriptionId, productId])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+// ───────────────────────── Settings & audit ─────────────────────────
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  before    Json?
+  after     Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+model Counter {
+  name  String @id
+  value Int    @default(0)
+}

@@ -1,0 +1,2 @@
+import { guardAdmin } from "@/lib/admin/guard"; import { NoAccess } from "@/components/admin/no-access"; import { AreasPage } from "@/components/admin/simple-pages"; import { prisma } from "@/lib/db";
+export default async function Page() { const { allowed } = await guardAdmin("delivery.write"); if (!allowed) return <NoAccess />; const emirates = await prisma.emirate.findMany({ orderBy: { sort: "asc" }, select: { id: true, nameAr: true, nameEn: true, active: true } }); return <AreasPage canWrite emirates={emirates} />; }

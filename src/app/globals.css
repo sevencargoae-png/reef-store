@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-cairo), "Segoe UI", Tahoma, Arial, sans-serif;
+  --color-reef-50: #f0f9f3;
+  --color-reef-100: #dcf1e3;
+  --color-reef-200: #b9e3c8;
+  --color-reef-300: #86cda3;
+  --color-reef-400: #4fb07a;
+  --color-reef-500: #2a9459;
+  --color-reef-600: #1c7a47;
+  --color-reef-700: #17623b;
+  --color-reef-800: #154e31;
+  --color-reef-900: #114029;
+  --color-mint-50: #f3fbf6;
+  --color-mint-100: #e6f6ec;
+  --color-mint-200: #cdeedb;
+  --color-leaf: #2f6b3f;
+  --color-ink: #163a26;
+  --color-muted: #6b7d72;
+  --color-berry: #d7263d;
+  --color-sun: #f2a516;
+  --radius-xl2: 1.25rem;
+  --shadow-soft: 0 10px 30px -12px rgba(23, 98, 59, 0.25);
+  --shadow-card: 0 4px 18px -6px rgba(17, 64, 41, 0.18);
+}
+
+:root {
+  --bg: #fbfdfb;
+  --surface: #ffffff;
+  --header-h: 64px;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* numbers and codes keep LTR order inside RTL text */
+.num { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+
+/* leafy blurred backdrop like the reference */
+.reef-backdrop {
+  background:
+    radial-gradient(60% 50% at 10% 15%, rgba(79, 176, 122, 0.22) 0%, transparent 60%),
+    radial-gradient(45% 45% at 90% 10%, rgba(134, 205, 163, 0.25) 0%, transparent 60%),
+    radial-gradient(50% 55% at 85% 90%, rgba(42, 148, 89, 0.18) 0%, transparent 60%),
+    radial-gradient(55% 45% at 10% 95%, rgba(185, 227, 200, 0.35) 0%, transparent 60%),
+    linear-gradient(180deg, #f7fcf8 0%, #fbfdfb 100%);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* the plant itself is the button: no card, soft hover lift + glow */
+.plant-btn { transition: transform .35s cubic-bezier(.2,.8,.2,1), filter .35s ease; }
+.plant-btn:hover, .plant-btn:focus-visible { transform: translateY(-6px) scale(1.03); filter: drop-shadow(0 18px 24px rgba(23, 98, 59, 0.28)); outline: none; }
+/* white studio backgrounds melt into the light page via multiply; the soft mask hides crop edges */
+.plant-img {
+  mix-blend-mode: multiply;
+  -webkit-mask-image: radial-gradient(ellipse 70% 66% at 50% 50%, #000 45%, rgba(0,0,0,.6) 70%, transparent 92%);
+  mask-image: radial-gradient(ellipse 70% 66% at 50% 50%, #000 45%, rgba(0,0,0,.6) 70%, transparent 92%);
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(.6); opacity: .9; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+.tap-ring::before, .tap-ring::after {
+  content: ""; position: absolute; inset: 0; border-radius: 9999px; border: 2px solid rgba(255,255,255,.95);
+  box-shadow: 0 0 0 2px rgba(42,148,89,.35); animation: pulse-ring 1.8s ease-out infinite;
+}
+.tap-ring::after { animation-delay: .9s; }
+
+@keyframes fade-up { from { opacity: 0; transform: translateY(12px);} to { opacity: 1; transform: none; } }
+.fade-up { animation: fade-up .5s ease both; }
+
+.hide-scrollbar { scrollbar-width: none; }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+
+input, select, textarea { font: inherit; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
