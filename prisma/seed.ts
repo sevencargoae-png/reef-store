@@ -189,6 +189,13 @@ async function main() {
     await prisma.user.update({ where: { id: existingAdmin.id }, data: { role: "SUPER_ADMIN", passwordHash: await hashPassword(pw), mustChangePassword: true } });
     console.log(`\n[seed] SUPER_ADMIN promoted from customer: ${adminPhone}${process.env.SEED_ADMIN_PASSWORD ? "" : ` — temporary password (shown once): ${pw}`}\n`);
   }
+  // One-off owner password reset: set ADMIN_RESET_PASSWORD on Render, deploy, log in, then clear it.
+  const resetPw = process.env.ADMIN_RESET_PASSWORD;
+  if (resetPw) {
+    await prisma.user.update({ where: { phone: adminPhone }, data: { passwordHash: await hashPassword(resetPw), mustChangePassword: true, status: "ACTIVE" } })
+      .then(() => console.log(`[seed] admin password reset for ${adminPhone}`))
+      .catch((e) => console.error("[seed] admin password reset failed", e));
+  }
   console.log("[seed] done");
 }
 
