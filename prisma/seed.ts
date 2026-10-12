@@ -178,10 +178,16 @@ async function main() {
 
   // First admin: phone/password from env; a random password is generated (and printed once) when not provided.
   const adminPhone = process.env.SEED_ADMIN_PHONE ?? "+971500000001";
-  if (!(await prisma.user.findUnique({ where: { phone: adminPhone } }))) {
+  const existingAdmin = await prisma.user.findUnique({ where: { phone: adminPhone } });
+  if (!existingAdmin) {
     const pw = process.env.SEED_ADMIN_PASSWORD ?? randomBytes(9).toString("base64url");
     await prisma.user.create({ data: { phone: adminPhone, name: "مدير ريف", role: "SUPER_ADMIN", passwordHash: await hashPassword(pw), mustChangePassword: true } }); // always forced to change on first login
     console.log(`\n[seed] SUPER_ADMIN created: ${adminPhone}${process.env.SEED_ADMIN_PASSWORD ? "" : ` — temporary password (shown once): ${pw}`}\n`);
+  } else if (existingAdmin.role === "CUSTOMER") {
+    // The owner's number may already exist as a customer (e.g. after trying the store): promote it.
+    const pw = process.env.SEED_ADMIN_PASSWORD ?? randomBytes(9).toString("base64url");
+    await prisma.user.update({ where: { id: existingAdmin.id }, data: { role: "SUPER_ADMIN", passwordHash: await hashPassword(pw), mustChangePassword: true } });
+    console.log(`\n[seed] SUPER_ADMIN promoted from customer: ${adminPhone}${process.env.SEED_ADMIN_PASSWORD ? "" : ` — temporary password (shown once): ${pw}`}\n`);
   }
   console.log("[seed] done");
 }
