@@ -15,7 +15,7 @@
     "postinstall": "prisma generate",
     "e2e": "node tests/e2e/customer-journey.mjs && node tests/e2e/admin-journey.mjs",
     "verify": "npm run lint && npm run typecheck && npm test",
-    "render-build": "npm ci && npx prisma migrate deploy && npx prisma db seed && npm run build"
+    "render-build": "npm ci --include=dev && npx prisma migrate deploy && npx prisma db seed && npm run build"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
