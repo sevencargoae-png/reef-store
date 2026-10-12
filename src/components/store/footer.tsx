@@ -20,7 +20,7 @@ export function Footer({ supportPhone }: { supportPhone: string }) {
         <div className="text-sm">
           <div className="font-semibold">{t("footer.support")}</div>
           {supportPhone ? <a href={`tel:${supportPhone}`} className="num mt-1 block text-reef-700">{supportPhone}</a> : null}
-          <p className="mt-4 text-xs text-muted">© {new Date().getFullYear()} Reef | ريف — {t("footer.rights")}</p>
+          <p className="mt-4 text-xs text-muted">© {new Date().getFullYear()} Reeef | ريف — {t("footer.rights")}</p>
         </div>
       </div>
     </footer>

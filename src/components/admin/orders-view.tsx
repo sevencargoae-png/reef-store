@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Printer } from "lucide-react";
+import { Barcode } from "./barcode";
 import { useI18n, useLocalized } from "@/lib/i18n/provider";
 import { useFmt } from "@/lib/use-format";
 import { api } from "@/lib/client-api";
@@ -98,6 +99,9 @@ export function OrderDetail({ id, canWrite }: { id: string; canWrite: boolean })
           </div>
         </div>
         <div className="space-y-4">
+          <div className="rounded-2xl bg-white p-4 text-center shadow-card">
+            <Barcode value={o.number} />
+          </div>
           <div className="rounded-2xl bg-white p-4 text-sm shadow-card">
             <h2 className="font-extrabold">{t("orders.customer")}</h2>
             <p className="mt-1"><Link href={`/admin/customers/${o.customer.id}`} className="font-semibold text-reef-700">{o.customer.name}</Link><br /><a href={`tel:${o.customer.phone}`} className="num text-muted">{o.customer.phone}</a></p>

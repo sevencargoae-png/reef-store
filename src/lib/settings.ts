@@ -19,7 +19,7 @@ export interface StoreSettings {
 }
 
 export const DEFAULT_SETTINGS: StoreSettings = {
-  storeNameAr: "ريف", storeNameEn: "Reef", currency: "AED",
+  storeNameAr: "ريف", storeNameEn: "Reeef", currency: "AED",
   vatEnabled: false, vatRate: 0.05, pricesIncludeVat: true,
   codEnabled: true, minOrderAed: 0,
   deliveryPromiseAr: "", deliveryPromiseEn: "",

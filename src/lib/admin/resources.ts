@@ -34,6 +34,13 @@ export const areas = crudRoutes({
   updateSchema: z.object({ emirateId: z.string().min(1).optional(), nameAr: z.string().min(1).optional(), nameEn: z.string().min(1).optional(), deliveryFee: money.optional(), freeDeliveryThreshold: money.nullable().optional(), minOrder: money.optional(), active: z.boolean().optional(), sort: z.number().int().optional() }),
 });
 
+export const complaints = crudRoutes({
+  entity: "Complaint", delegate: () => d<{ id: string }>(prisma.complaint), readPerm: "customers.read", writePerm: "customers.write",
+  searchFields: ["name", "phone", "subject"], orderBy: [{ createdAt: "desc" }], include: { user: { select: { name: true } }, order: { select: { number: true } } },
+  createSchema: z.object({ name: z.string().min(1), phone: z.string().min(1), subject: z.string().min(1), body: z.string().min(1), status: z.string().default("OPEN"), userId: z.string().nullable().optional(), orderId: z.string().nullable().optional() }),
+  updateSchema: z.object({ status: z.string().optional(), resolution: z.string().nullable().optional(), subject: z.string().optional(), body: z.string().optional() }),
+});
+
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 export const slots = crudRoutes({
   entity: "DeliverySlot", delegate: () => d<{ id: string }>(prisma.deliverySlot), readPerm: "delivery.write", writePerm: "delivery.write", orderBy: [{ weekday: "asc" }, { startTime: "asc" }],

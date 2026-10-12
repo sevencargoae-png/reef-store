@@ -37,11 +37,15 @@ export function CustomersList() {
 
 interface Detail { id: string; name: string; phone: string; email: string | null; status: string; createdAt: string; householdSize: number | null; addresses: { id: string; label: string; street: string; building: string; unit: string | null; area: { nameAr: string }; emirate: { nameAr: string } }[]; orders: OrderDTO[] }
 
+interface BehaviorStats { totalOrders: number; deliveredOrders: number; cancelledOrders: number; failedDeliveries: number }
+
 export function CustomerDetail({ id, canWrite }: { id: string; canWrite: boolean }) {
   const { t } = useI18n(); const { money, date, dateTime } = useFmt(); const toast = useToast(); const err = useErr();
   const { data: c, reload } = useApi<Detail>(`/api/admin/customers/${id}`);
+  const { data: behavior } = useApi<BehaviorStats>(`/api/admin/customers/${id}/behavior`);
   if (!c) return <p className="text-muted">{t("common.loading")}</p>;
   const toggle = async () => { try { await api(`/api/admin/customers/${id}`, { method: "PATCH", json: { status: c.status === "ACTIVE" ? "SUSPENDED" : "ACTIVE" } }); toast.success(t("admin.saved")); reload(); } catch (e) { toast.error(err(e)); } };
+  const cancelRate = behavior && behavior.totalOrders > 0 ? behavior.cancelledOrders / behavior.totalOrders : 0;
   return (
     <div>
       <PageHeader title={c.name}>
@@ -51,6 +55,16 @@ export function CustomerDetail({ id, canWrite }: { id: string; canWrite: boolean
       <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
         <div className="space-y-4">
           <div className="rounded-2xl bg-white p-4 text-sm shadow-card"><div className="num">{c.phone}</div>{c.email && <div className="num text-muted">{c.email}</div>}<div className="text-xs text-muted">{t("f.createdAt")}: {dateTime(c.createdAt)}</div>{c.householdSize && <div className="text-xs text-muted">{t("account.household")}: {c.householdSize}</div>}</div>
+          {behavior && <div className="rounded-2xl bg-white p-4 text-sm shadow-card">
+            <h2 className="font-extrabold">{t("customers.behavior" as MessageKey)}</h2>
+            {cancelRate > 0.3 && <p className="mt-1 text-sm font-bold text-berry">{t("customers.warningFlag" as MessageKey)}</p>}
+            <dl className="mt-2 grid grid-cols-2 gap-2">
+              <div><dt className="text-xs text-muted">{t("customers.totalOrders" as MessageKey)}</dt><dd className="num font-bold">{behavior.totalOrders}</dd></div>
+              <div><dt className="text-xs text-muted">{t("customers.deliveredOrders" as MessageKey)}</dt><dd className="num font-bold text-reef-700">{behavior.deliveredOrders}</dd></div>
+              <div><dt className="text-xs text-muted">{t("customers.cancelledOrders" as MessageKey)}</dt><dd className="num font-bold text-berry">{behavior.cancelledOrders}</dd></div>
+              <div><dt className="text-xs text-muted">{t("customers.failedDeliveries" as MessageKey)}</dt><dd className="num font-bold text-orange-600">{behavior.failedDeliveries}</dd></div>
+            </dl>
+          </div>}
           <div className="rounded-2xl bg-white p-4 text-sm shadow-card"><h2 className="font-extrabold">{t("customers.addresses")}</h2><ul className="mt-2 space-y-2">{c.addresses.map((a) => <li key={a.id}><b>{a.label}</b> — {a.emirate.nameAr} · {a.area.nameAr}<br /><span className="text-muted">{a.street}، {a.building}{a.unit ? `، ${a.unit}` : ""}</span></li>)}{!c.addresses.length && <li className="text-muted">{t("address.none")}</li>}</ul></div>
         </div>
         <Table<OrderDTO> rows={c.orders} columns={[

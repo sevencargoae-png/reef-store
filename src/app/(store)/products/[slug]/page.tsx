@@ -8,7 +8,7 @@ import { ProductRow } from "@/components/store/home";
 export async function generateMetadata({ params }: PageProps<"/products/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const p = await getProductBySlug(slug);
-  return { title: p ? `${p.nameAr} · ${p.nameEn}` : "Reef" };
+  return { title: p ? `${p.nameAr} · ${p.nameEn}` : "Reeef" };
 }
 
 export default async function ProductPage({ params }: PageProps<"/products/[slug]">) {

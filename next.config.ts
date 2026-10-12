@@ -10,6 +10,8 @@ const csp = [
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   `connect-src 'self'${dev ? " ws: wss:" : ""}`,
+  "worker-src 'self'",
+  "manifest-src 'self'",
   "frame-src 'none'",
   "object-src 'none'",
   "base-uri 'self'",
@@ -33,6 +35,9 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: security },
       { source: "/api/:path*", headers: [{ key: "Cache-Control", value: "no-store" }] },
+      // produce photos never change in place (new photo = new file name): let phones keep them for a year
+      ...["/plants/:path*", "/img/:path*", "/icons/:path*"].map((source) => ({ source, headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }] })),
+      { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }, { key: "Service-Worker-Allowed", value: "/" }] },
     ];
   },
 };

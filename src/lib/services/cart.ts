@@ -45,7 +45,8 @@ export async function resolveCart(user: AuthUser | null, create = true) {
         }
         await prisma.cart.delete({ where: { id: guest.id } });
       }
-      (await cookies()).delete(CART_COOKIE);
+      // Cookies are read-only while a page renders; the stale guest cookie is cleared on the next API call instead.
+      try { (await cookies()).delete(CART_COOKIE); } catch { /* read-only render context */ }
     }
     return cart;
   }

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { listCategories, listProducts, type SortKey } from "@/lib/services/catalog";
 import { getT } from "@/lib/i18n/server";
+import { ProduceImage } from "@/components/store/plant";
 import { CatalogToolbar, CategoryChips, Pagination, ProductGrid } from "@/components/store/catalog";
 
 export default async function CategoryPage({ params, searchParams }: PageProps<"/categories/[slug]">) {
@@ -16,7 +17,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps<"
   return (
     <div className="py-6">
       <div className="mb-4 flex items-center gap-4">
-        {cat.image && <img src={cat.image} alt="" className="plant-img hidden h-24 w-24 object-contain md:block" />}
+        {cat.image && <div className="w-28 shrink-0 md:w-36"><ProduceImage url={cat.image} alt="" size="sm" eager sizes="144px" /></div>}
         <div>
           <h1 className="text-2xl font-extrabold text-reef-800">{locale === "ar" ? cat.nameAr : cat.nameEn}</h1>
           {(locale === "ar" ? cat.descAr : cat.descEn) && <p className="text-sm text-muted">{locale === "ar" ? cat.descAr : cat.descEn}</p>}

@@ -8,6 +8,7 @@ import type { ProductDTO } from "@/lib/services/catalog";
 import { cx } from "@/components/ui/cx";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { WishButton } from "./wish-button";
+import { ProduceImage } from "./plant";
 
 export function QtyStepper({ product, size = "md" }: { product: ProductDTO; size?: "sm" | "md" | "lg" }) {
   const { t } = useI18n();
@@ -53,9 +54,14 @@ export function ProductCard({ product }: { product: ProductDTO }) {
   const img = product.images[0]?.url;
   const off = product.compareAtPrice ? Math.round((1 - product.price / product.compareAtPrice) * 100) : 0;
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-card transition hover:-translate-y-0.5 hover:shadow-soft">
-      <Link href={`/products/${product.slug}`} className="relative block aspect-[4/3] overflow-hidden bg-mint-50">
-        {img ? <img src={img} alt={L(product, "name")} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" /> : <div className="h-full w-full bg-mint-100" />}
+    <article className="group relative flex flex-col overflow-hidden rounded-3xl bg-gradient-to-b from-white to-mint-50/70 shadow-card ring-1 ring-white transition hover:-translate-y-1 hover:shadow-soft">
+      <Link href={`/products/${product.slug}`} className="plant-stage relative block px-3 pt-2">
+        <ProduceImage url={img} alt={L(product, "name")} size="sm" sizes="(max-width: 640px) 44vw, 17vw" />
+        {/^(الإمارات|uae|united arab emirates)/i.test(product.origin ?? "") && (
+          <svg viewBox="0 0 30 20" className="absolute bottom-1.5 end-2 h-4 w-6 overflow-hidden rounded-[3px] shadow ring-1 ring-white" role="img" aria-label="UAE">
+            <rect width="30" height="20" fill="#00732f" /><rect y="6.67" width="30" height="6.67" fill="#fff" /><rect y="13.33" width="30" height="6.67" fill="#000" /><rect width="8" height="20" fill="#ff0000" />
+          </svg>
+        )}
         {off > 0 && <span className="absolute top-2 start-2 rounded-full bg-berry px-2 py-0.5 text-[11px] font-bold text-white num">-{off}%</span>}
         {product.lowStock && <span className="absolute bottom-2 start-2 rounded-full bg-sun/90 px-2 py-0.5 text-[11px] font-bold text-white">{t("product.lowStock")}</span>}
       </Link>

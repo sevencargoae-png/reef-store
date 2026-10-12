@@ -5,6 +5,7 @@ import { useI18n, useLocalized } from "@/lib/i18n/provider";
 import type { ProductDTO } from "@/lib/services/catalog";
 import { Price, QtyStepper } from "./product-card";
 import { WishButton } from "./wish-button";
+import { ProduceImage, plantKeyFor } from "./plant";
 import { useFmt } from "@/lib/use-format";
 
 export function ProductDetail({ product }: { product: ProductDTO }) {
@@ -14,8 +15,9 @@ export function ProductDetail({ product }: { product: ProductDTO }) {
   const img = product.images[0]?.url;
   return (
     <div className="grid gap-6 py-6 md:grid-cols-2 md:gap-10">
-      <div className="relative overflow-hidden rounded-3xl bg-white shadow-card">
-        {img ? <img src={img} alt={L(product, "name")} className="aspect-square w-full object-cover" /> : <div className="aspect-square bg-mint-100" />}
+      <div className="plant-stage relative mx-auto w-full max-w-xl">
+        <ProduceImage url={img} alt={L(product, "name")} size="lg" eager sizes="(max-width: 768px) 92vw, 46vw" />
+        {plantKeyFor(img) && <span className="tap-hint bottom-3 start-1/2 -translate-x-1/2 rtl:translate-x-1/2">{t("home.tapHint")}</span>}
         <div className="absolute top-3 end-3"><WishButton productId={product.id} /></div>
       </div>
       <div>

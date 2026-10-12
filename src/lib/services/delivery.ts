@@ -7,7 +7,7 @@ import { uaeToday, uaeWeekday, addDays, slotOpen } from "@/lib/dates";
 export interface AreaDTO { id: string; emirateId: string; emirateCode: string; emirateNameAr: string; emirateNameEn: string; nameAr: string; nameEn: string; deliveryFee: number; freeDeliveryThreshold: number | null; minOrder: number; active: boolean }
 
 export async function listEmirates() {
-  return prisma.emirate.findMany({ where: { active: true }, orderBy: { sort: "asc" }, select: { id: true, code: true, nameAr: true, nameEn: true } });
+  return prisma.emirate.findMany({ orderBy: { sort: "asc" }, select: { id: true, code: true, nameAr: true, nameEn: true, active: true } });
 }
 
 export async function listAreas(opts: { onlyActive?: boolean; emirateId?: string } = { onlyActive: true }): Promise<AreaDTO[]> {
