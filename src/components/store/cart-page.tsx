@@ -27,7 +27,7 @@ export function CartPage({ loggedIn }: { loggedIn: boolean }) {
         <ul className="divide-y divide-reef-100 overflow-hidden rounded-2xl bg-white shadow-card">
           {cart.items.map((l) => (
             <li key={l.product.id} className="flex items-center gap-3 p-3">
-              <Link href={`/products/${l.product.slug}`} className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-mint-50 p-1"><ProduceImage url={l.product.images[0]?.url} alt="" variant="thumb" /></Link>
+              <Link href={`/products/${l.product.slug}`} className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-mint-50 p-1"><ProduceImage url={l.product.images[0]?.url} alt={L(l.product, "name")} variant="thumb" /></Link>
               <div className="min-w-0 flex-1">
                 <Link href={`/products/${l.product.slug}`} className="line-clamp-1 font-bold">{L(l.product, "name")}</Link>
                 <div className="num text-xs text-muted">{money(l.product.price)} / {t(`unit.${l.product.unit}`)}</div>

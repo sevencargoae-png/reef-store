@@ -74,7 +74,7 @@ export function CategoryStrip({ categories }: { categories: CategoryDTO[] }) {
         {categories.map((c, i) => (
           <Link key={c.id} href={`/categories/${c.slug}`} className="group flex w-[76px] shrink-0 flex-col items-center gap-1 text-center md:w-auto">
             <span className="cat-bubble flex h-[72px] w-[72px] items-center justify-center rounded-full md:h-[84px] md:w-[84px]">
-              <span className="h-[86%] w-[86%]"><ProduceImage url={c.image} alt="" variant="icon" eager={i < 6} /></span>
+              <span className="h-[86%] w-[86%]"><ProduceImage url={c.image} alt={L(c, "name")} variant="icon" eager={i < 6} /></span>
             </span>
             <span className="line-clamp-2 text-[11.5px] font-bold leading-4 text-ink group-hover:text-reef-700 md:text-sm">{L(c, "name")}</span>
           </Link>
@@ -111,7 +111,7 @@ export function CategoryTiles({ categories }: { categories: CategoryDTO[] }) {
           <Link key={c.id} href={`/categories/${c.slug}`} className="cat-tile group relative isolate flex h-36 items-end overflow-hidden rounded-2xl p-3 text-white shadow-card">
             <img src="/img/farm-hero-960.webp" alt="" className="absolute inset-0 -z-20 h-full w-full scale-125 object-cover blur-[1px] transition duration-700 group-hover:scale-[1.32]" style={{ objectPosition: TILE_POS[i % TILE_POS.length] }} loading="lazy" />
             <span className="absolute inset-0 -z-10 bg-gradient-to-t from-reef-900/85 via-reef-900/30 to-transparent" aria-hidden />
-            <span className="absolute -top-2 end-1 h-24 w-24 drop-shadow-lg"><ProduceImage url={c.image} alt="" variant="icon" /></span>
+            <span className="absolute -top-2 end-1 h-24 w-24 drop-shadow-lg"><ProduceImage url={c.image} alt={L(c, "name")} variant="icon" /></span>
             <span><span className="block text-lg font-extrabold leading-6">{L(c, "name")}</span><span className="num text-xs text-white/85">{t("home.products", { count: c.productCount })}</span></span>
           </Link>
         ))}

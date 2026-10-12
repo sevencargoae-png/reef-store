@@ -16,6 +16,8 @@ export function Footer({ supportPhone }: { supportPhone: string }) {
           <Link href="/account/orders" className="hover:text-reef-700">{t("nav.orders")}</Link>
           <Link href="/account/lists" className="hover:text-reef-700">{t("nav.lists")}</Link>
           <Link href="/account/subscriptions" className="hover:text-reef-700">{t("nav.subscriptions")}</Link>
+          <Link href="/privacy" className="hover:text-reef-700">{t("nav.privacy")}</Link>
+          <Link href="/terms" className="hover:text-reef-700">{t("nav.terms")}</Link>
         </div>
         <div className="text-sm">
           <div className="font-semibold">{t("footer.support")}</div>

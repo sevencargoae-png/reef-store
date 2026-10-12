@@ -13,6 +13,21 @@ export const metadata: Metadata = {
   icons: { icon: "/icon.svg", apple: "/icons/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "Reeef ريف", statusBarStyle: "default" },
   formatDetection: { telephone: false },
+  openGraph: {
+    type: "website",
+    locale: "ar_AE",
+    url: "https://reef-ztg0.onrender.com",
+    siteName: "Reeef | ريف",
+    title: "Reeef | ريف — خضار وفواكه طازجة",
+    description: "من المزرعة إلى بيتك مباشرة — توصيل الخضروات والفواكه الطازجة داخل الإمارات",
+    images: [{ url: "/img/farm-hero.webp", width: 1200, height: 630, alt: "Reeef — Fresh produce delivery" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Reeef | ريف — خضار وفواكه طازجة",
+    description: "من المزرعة إلى بيتك مباشرة — توصيل الخضروات والفواكه الطازجة داخل الإمارات",
+    images: ["/img/farm-hero.webp"],
+  },
 };
 export const viewport: Viewport = { themeColor: "#17623b", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
