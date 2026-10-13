@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "ar_AE",
-    url: "https://reef-ztg0.onrender.com",
+        url: process.env.APP_URL || "https://reeef.io",
     siteName: "Reeef | ريف",
     title: "Reeef | ريف — خضار وفواكه طازجة",
     description: "من المزرعة إلى بيتك مباشرة — توصيل الخضروات والفواكه الطازجة داخل الإمارات",
