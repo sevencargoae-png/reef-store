@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE = "https://reef-ztg0.onrender.com";
+const BASE = process.env.APP_URL || "https://reeef.io";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
